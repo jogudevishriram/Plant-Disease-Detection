@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plant Disease Detection</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #a8e6cf, #dcedc1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px #ffffff;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 30px 40px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        input[type=file] {
+            padding: 10px;
+            border: 2px dashed #2e7d32;
+            border-radius: 10px;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type=file]:hover {
+            background: #f1f8e9;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: #2e7d32;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background: #1b5e20;
+            transform: scale(1.05);
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fff0;
+            border-radius: 10px;
+            border: 1px solid #c8e6c9;
+            font-size: 18px;
+            color: #2e7d32;
+        }
+
+        #result img {
+            margin-top: 15px;
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>🌿 Plant Disease Detection</h1>
+    <div class="card">
+        <form id="upload-form">
+            <input type="file" name="image" id="image" accept="image/*" required>
+            <br>
+            <button type="submit">Predict</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById("upload-form");
+        const resultDiv = document.getElementById("result");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById("image");
+            const formData = new FormData();
+            formData.append("image", fileInput.files[0]);
+
+            resultDiv.innerHTML = "Predicting... 🌱";
+            try {
+                const response = await fetch(window.location.origin + "/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    throw new Error("Server returned non-JSON response: " + text.substring(0, 200));
+                }
+
+                const data = await response.json();
+
+                if (data.prediction) {
+                    resultDiv.innerHTML = `
+                        <strong>Prediction:</strong> ${data.prediction.label} <br>
+                        <strong>Confidence:</strong> ${data.prediction.confidence} <br>
+                        <img src="${data.image_url}" alt="Predicted Image">
+                    `;
+                } else if (data.message) {
+                    resultDiv.innerHTML = data.message;
+                } else if (data.error) {
+                    resultDiv.innerHTML = "Error: " + data.error;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = "Error: " + err.message;
+            }
+        });
+    </script>
+</body>
+</html>
