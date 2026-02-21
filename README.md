@@ -5,3 +5,4 @@ This Flask app detects plant diseases using a YOLOv8m model. Upload an image and
 Model: YOLOv8m  
 Framework: Flask  
 Deployment: Hugging Face Spaces
+# plant-disease-detection-Yolo
